@@ -1,0 +1,7 @@
+const defaults=[{id:"1",name:"Starter Combo",price:"₹49",description:"Perfect for a quick boost.",details:"5,000 Views\n250 Likes\n500 Shares",active:true},{id:"2",name:"Growth Combo",price:"₹69",description:"More reach, more engagement.",details:"8,000 Views\n400 Likes\n1,000 Shares",active:true},{id:"3",name:"Pro Combo",price:"₹99",description:"For creators ready to scale.",details:"15,000 Views\n750 Likes\n1,500 Shares",active:true}];
+async function cmd(c){if(!process.env.UPSTASH_REDIS_REST_URL||!process.env.UPSTASH_REDIS_REST_TOKEN)throw Error("Upstash Redis is not configured");let r=await fetch(process.env.UPSTASH_REDIS_REST_URL,{method:"POST",headers:{Authorization:"Bearer "+process.env.UPSTASH_REDIS_REST_TOKEN,"Content-Type":"application/json"},body:JSON.stringify(c)});let d=await r.json();return d.result}
+async function get(k,def){let x=await cmd(["GET",k]);return x?JSON.parse(x):def}
+async function set(k,v){return cmd(["SET",k,JSON.stringify(v)])}
+async function services(){return get("smm:services",defaults)}
+async function settings(){return get("smm:settings",{apiUrl:process.env.MRSMM_API_URL||"https://mrsmm.org/api/v2",apiKey:process.env.MRSMM_API_KEY||""})}
+module.exports={cmd,get,set,services,settings};

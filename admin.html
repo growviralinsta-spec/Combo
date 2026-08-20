@@ -1,0 +1,29 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>SMM Manager</title><style>
+body{margin:0;background:#080808;color:#fff;font-family:Arial}.wrap{max-width:950px;margin:auto;padding:22px}.card{background:#111;border:1px solid #292929;border-radius:18px;padding:20px;margin:15px 0}input,textarea{width:100%;box-sizing:border-box;background:#090909;color:#fff;border:1px solid #333;border-radius:10px;padding:12px;margin:7px 0 14px}button{border:0;border-radius:10px;padding:12px 16px;background:linear-gradient(135deg,#7c3aed,#db2777);color:#fff;font-weight:800;cursor:pointer}.row{display:grid;grid-template-columns:1fr 1fr;gap:14px}.svc{border:1px solid #292929;border-radius:14px;padding:15px;margin:10px 0}.top{display:flex;justify-content:space-between;gap:15px}.tag{font-size:10px;padding:5px 8px;border-radius:20px;background:#173b25;color:#7ff0a2}.off{background:#333;color:#aaa}.msg{margin:12px 0;padding:11px;border-radius:9px;display:none}@media(max-width:650px){.row{grid-template-columns:1fr}.top{display:block}}</style></head><body><div class="wrap">
+<div style="display:flex;justify-content:space-between;align-items:center"><div><h1>SMM Manager</h1><p style="color:#999">Manage services and API settings.</p></div><button onclick="logout()">Logout</button></div><div id="msg" class="msg"></div>
+<div class="card"><h2>MrSMM API Settings</h2><input id="url" placeholder="https://mrsmm.org/api/v2"><input id="key" type="password" placeholder="API key"><button onclick="saveSettings()">Save API Settings</button></div>
+<div class="card"><h2>Add / Edit Service</h2><div class="row"><input id="id" placeholder="MrSMM Service ID"><input id="name" placeholder="Service name"></div><div class="row"><input id="price" placeholder="₹99"><input id="desc" placeholder="Short description"></div><textarea id="details" rows="5" placeholder="10,000 Views&#10;500 Likes&#10;1,000 Shares"></textarea><label><input id="active" type="checkbox" checked style="width:auto"> Active</label><br><br><button onclick="save()">Save Service</button></div>
+<div class="card"><h2>Services</h2><div id="list">Loading...</div></div></div>
+<script>
+const ADMIN_PASSWORD='Service4u';
+function login(){
+ const p=document.getElementById('pw').value;
+ if(p===ADMIN_PASSWORD){
+   sessionStorage.setItem('smm_admin_login','1');
+   document.getElementById('login').style.display='none';
+   document.getElementById('app').style.display='block';
+   init();
+ }else{
+   const e=document.getElementById('loginMsg');e.style.display='block';e.textContent='Wrong password.';
+ }
+}
+function logout(){sessionStorage.removeItem('smm_admin_login');location.reload()}
+async function init(){try{let s=await fetch('/api/admin-settings').then(r=>r.json());document.getElementById('url').value=s.apiUrl||'';load()}catch(e){msg('Could not load settings',false)}}
+async function load(){let a=await fetch('/api/admin-services').then(r=>r.json());document.getElementById('list').innerHTML=a.map(s=>`<div class="svc"><div class="top"><div><b>${esc(s.name)}</b><div style="color:#999">ID: ${esc(s.id)} · ${esc(s.price)}</div><div style="color:#888">${esc(s.details).replace(/\n/g,'<br>')}</div></div><div><span class="tag ${s.active?'':'off'}">${s.active?'ACTIVE':'OFF'}</span><br><br><button onclick="del('${esc(s.id)}')">Delete</button></div></div></div>`).join('')||'<p style="color:#888">No services.</p>'}
+async function save(){let s={id:document.getElementById('id').value,name:document.getElementById('name').value,price:document.getElementById('price').value,description:document.getElementById('desc').value,details:document.getElementById('details').value,active:document.getElementById('active').checked};let r=await fetch('/api/admin-services',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(s)});let d=await r.json();if(!r.ok)return msg(d.error||'Error',false);msg('Service saved',true);load();['id','name','price','desc','details'].forEach(x=>document.getElementById(x).value='')}
+async function del(x){if(!confirm('Delete service?'))return;await fetch('/api/admin-services?id='+encodeURIComponent(x),{method:'DELETE'});load()}
+async function saveSettings(){let r=await fetch('/api/admin-settings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({apiUrl:document.getElementById('url').value,apiKey:document.getElementById('key').value})}),d=await r.json();if(!r.ok)return msg(d.error||'Error',false);document.getElementById('key').value='';msg('API settings saved',true)}
+function msg(t,ok){let e=document.getElementById('msg');e.style.display='block';e.style.background=ok?'#12351f':'#421717';e.textContent=t}
+const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
+if(sessionStorage.getItem('smm_admin_login')==='1'){document.getElementById('login').style.display='none';document.getElementById('app').style.display='block';init()}
+</script></body></html>
