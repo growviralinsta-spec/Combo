@@ -1,8 +1,0 @@
-{
-  "settings": {
-    "api_url": "https://mrsmm.org/api/v2",
-    "api_key": "PUT_YOUR_NEW_MRSMM_API_KEY_HERE",
-    "admin_password": "CHANGE_THIS_PASSWORD"
-  },
-  "services": []
-}
